@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+
 from contextlib import asynccontextmanager
 import time
 from loguru import logger
@@ -12,11 +13,16 @@ from app.core.config import settings
 from app.core.database import create_tables
 from app.controllers.provider_controller import router as provider_router
 from app.controllers.auth_controller import router as auth_router
+
 from app.controllers.patient_controller import router as patient_router
 from app.controllers.availability_controller import router as availability_router
 from app.middlewares.rate_limiting import rate_limit_middleware
 from app.middlewares.validation import validation_middleware_handler
 from app.schemas.patient_schema import ValidationErrorResponse
+
+from app.middlewares.rate_limiting import rate_limit_middleware
+from app.middlewares.validation import validation_middleware_handler
+
 
 
 # Configure logging
@@ -115,6 +121,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle Pydantic validation errors"""
@@ -138,6 +145,11 @@ app.include_router(provider_router)
 app.include_router(auth_router)
 app.include_router(patient_router)
 app.include_router(availability_router)
+
+# Include routers
+app.include_router(provider_router)
+app.include_router(auth_router)
+
 
 
 # Root endpoint
