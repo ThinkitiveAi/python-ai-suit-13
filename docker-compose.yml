@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build: .
@@ -16,6 +14,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
+    user: "1001:1001"  # Use the appuser's UID/GID to match host user
     restart: unless-stopped
 
   postgres:

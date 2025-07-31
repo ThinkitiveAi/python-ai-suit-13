@@ -109,4 +109,6 @@ def get_provider_collection():
 # Create tables for relational databases
 def create_tables():
     if Base:
+        # Import patient models to ensure they are registered with Base
+        from app.models.patient_model import PatientSQL, PatientRefreshTokenSQL
         Base.metadata.create_all(bind=engine)

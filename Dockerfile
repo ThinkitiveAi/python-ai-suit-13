@@ -27,9 +27,15 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p logs uploads
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser
+# Create non-root user with specific UID to match host user
+RUN adduser --disabled-password --gecos '' --uid 1001 appuser
+
+# Set proper permissions for logs and uploads directories
 RUN chown -R appuser:appuser /app
+RUN chmod -R 755 /app
+RUN chmod 777 /app/logs
+RUN chmod 777 /app/uploads
+
 USER appuser
 
 # Expose port
