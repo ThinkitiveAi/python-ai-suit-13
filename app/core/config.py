@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # Database settings
     database_url: str = "postgresql://user:password@localhost/provider_registration"
-    database_type: str = "postgresql"  # postgresql, mysql, mongodb
+    database_type: str = "mongodb"  # postgresql, mysql, mongodb
 
     # MongoDB settings (if using MongoDB)
     mongodb_url: Optional[str] = None
@@ -48,7 +48,11 @@ class Settings(BaseSettings):
     log_file: str = "logs/app.log"
 
     # CORS settings
-    allowed_origins: list = ["http://localhost:3000", "http://localhost:8080"]
+    allowed_origins: list = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:5173",
+    ]
 
     class Config:
         env_file = ".env"

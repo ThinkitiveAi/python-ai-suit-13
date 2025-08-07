@@ -34,7 +34,7 @@ class EmergencyContact(BaseModel):
     name: str = Field(
         ..., min_length=1, max_length=100, description="Emergency contact name"
     )
-    phone: str = Field(..., description="Emergency contact phone number")
+    phone: str = Field(..., description="Emergency contact phone number", nullable=True)
     relationship: str = Field(
         ..., min_length=1, max_length=50, description="Relationship to patient"
     )

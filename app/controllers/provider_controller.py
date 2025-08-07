@@ -248,6 +248,22 @@ async def verify_provider_email(token: str, db: Session = Depends(get_db)):
         )
 
 
+@router.get("/health", response_model=Dict[str, Any])
+async def health_check():
+    """
+    Health check endpoint.
+
+    Returns:
+        Dict[str, Any]: Health status
+    """
+    return {
+        "status": "healthy",
+        "service": "Provider Registration API",
+        "version": "1.0.0",
+        "timestamp": "2024-01-01T00:00:00Z",
+    }
+
+
 @router.get("/{provider_id}", response_model=ProviderDetailResponse)
 async def get_provider_details(provider_id: str, db: Session = Depends(get_db)):
     """
@@ -283,19 +299,3 @@ async def get_provider_details(provider_id: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
         )
-
-
-@router.get("/health", response_model=Dict[str, Any])
-async def health_check():
-    """
-    Health check endpoint.
-
-    Returns:
-        Dict[str, Any]: Health status
-    """
-    return {
-        "status": "healthy",
-        "service": "Provider Registration API",
-        "version": "1.0.0",
-        "timestamp": "2024-01-01T00:00:00Z",
-    }

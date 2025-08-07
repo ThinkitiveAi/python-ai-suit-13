@@ -68,6 +68,7 @@ class ProviderSQL(Base):
     )
     license_document_url = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
+    role = Column(String(20), default="provider")  # provider, admin, superuser
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     last_login = Column(DateTime, nullable=True)

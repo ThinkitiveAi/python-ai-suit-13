@@ -21,7 +21,8 @@ class ProviderService:
     ):
         self.db = db
         self.mongo_collection = mongo_collection or get_provider_collection()
-        self.validation_service = ValidationService(db, mongo_collection)
+        # Only pass mongo_collection to validation service if it's not None
+        self.validation_service = ValidationService(db, self.mongo_collection)
         self.email_service = EmailService()
 
     def register_provider(
@@ -74,26 +75,44 @@ class ProviderService:
                     "Database save failed",
                 )
 
-            # Send verification email
-            email_sent = self.email_service.send_provider_verification_email(
-                provider_id=provider_id,
-                email=provider_data["email"],
-                first_name=provider_data["first_name"],
-                last_name=provider_data["last_name"],
-            )
+            # Send verification email (non-blocking)
+            email_sent = False
+            try:
+                # Check if email service is configured
+                if self.email_service.is_email_service_available():
+                    email_sent = self.email_service.send_provider_verification_email(
+                        provider_id=provider_id,
+                        email=provider_data["email"],
+                        first_name=provider_data["first_name"],
+                        last_name=provider_data["last_name"],
+                    )
+                else:
+                    logger.warning("Email service not configured. Skipping email send.")
+            except Exception as e:
+                logger.error(f"Error sending verification email: {e}")
+                # Don't fail registration if email fails
+                email_sent = False
 
             # Log email attempt
-            self.email_service.log_email_attempt(
-                email=provider_data["email"],
-                email_type="verification",
-                success=email_sent,
-                provider_id=provider_id,
-            )
+            try:
+                self.email_service.log_email_attempt(
+                    email=provider_data["email"],
+                    email_type="verification",
+                    success=email_sent,
+                    provider_id=provider_id,
+                )
+            except Exception as e:
+                logger.error(f"Error logging email attempt: {e}")
 
             # Prepare success response
+            if email_sent:
+                message = "Provider registered successfully. Verification email sent."
+            else:
+                message = "Provider registered successfully. Email service not available - please contact support for verification."
+
             response_data = {
                 "success": True,
-                "message": "Provider registered successfully. Verification email sent.",
+                "message": message,
                 "data": {
                     "provider_id": provider_id,
                     "email": provider_data["email"],

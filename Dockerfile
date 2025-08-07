@@ -36,9 +36,7 @@ RUN chmod -R 755 /app
 RUN chmod 777 /app/logs
 RUN chmod 777 /app/uploads
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser
-RUN chown -R appuser:appuser /app
+# Switch to non-root user
 USER appuser
 
 # Expose port

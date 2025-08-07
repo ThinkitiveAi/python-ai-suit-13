@@ -38,11 +38,14 @@ class AuthService:
             self._log_attempt(identifier, client_ip, False, reason="locked")
             return None, "ACCOUNT_LOCKED"
 
-        # Check if account is active and verified
-        if not provider.is_active or provider.verification_status != "verified":
-            self._log_attempt(
-                identifier, client_ip, False, reason="inactive_or_unverified"
-            )
+        # Check if account is active and verified (admin/superuser bypass verification)
+        if not provider.is_active:
+            self._log_attempt(identifier, client_ip, False, reason="inactive")
+            return None, "NOT_VERIFIED_OR_INACTIVE"
+
+        # For regular providers, check verification status
+        if provider.role == "provider" and provider.verification_status != "verified":
+            self._log_attempt(identifier, client_ip, False, reason="unverified")
             return None, "NOT_VERIFIED_OR_INACTIVE"
 
         # Check password
@@ -70,7 +73,8 @@ class AuthService:
         payload = {
             "provider_id": provider.id,
             "email": provider.email,
-            "role": "provider",
+            "role": provider.role
+            or "provider",  # Use role from database, default to provider
             "specialization": provider.specialization,
             "verification_status": provider.verification_status,
         }

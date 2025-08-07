@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import date
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/v1", tags=["Provider Availability"])
 
 
 @router.post(
-    "/provider/availability",
+    "/availability",
     response_model=CreateAvailabilityResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create Provider Availability Slots",
@@ -59,7 +59,7 @@ async def create_availability_slots(
 
 
 @router.get(
-    "/provider/{provider_id}/availability",
+    "/availability/provider/{provider_id}",
     response_model=ProviderAvailabilityResponse,
     status_code=status.HTTP_200_OK,
     summary="Get Provider Availability",
@@ -114,7 +114,7 @@ async def get_provider_availability(
 
 
 @router.put(
-    "/provider/availability/{slot_id}",
+    "/availability/{slot_id}",
     status_code=status.HTTP_200_OK,
     summary="Update Availability Slot",
     description="Update a specific availability slot",
@@ -154,7 +154,7 @@ async def update_availability_slot(
 
 
 @router.delete(
-    "/provider/availability/{slot_id}",
+    "/availability/{slot_id}",
     status_code=status.HTTP_200_OK,
     summary="Delete Availability Slot",
     description="Delete a specific availability slot",
@@ -252,7 +252,7 @@ async def search_available_slots(
 
 
 @router.get(
-    "/provider/availability/summary",
+    "/availability/summary",
     status_code=status.HTTP_200_OK,
     summary="Get Availability Summary",
     description="Get a summary of provider's availability statistics",
@@ -312,7 +312,7 @@ async def get_availability_summary(
 
 
 @router.post(
-    "/provider/availability/bulk-update",
+    "/availability/bulk-update",
     status_code=status.HTTP_200_OK,
     summary="Bulk Update Availability",
     description="Update multiple availability slots at once",
@@ -362,7 +362,7 @@ async def bulk_update_availability(
 
 
 @router.get(
-    "/provider/availability/conflicts",
+    "/availability/conflicts",
     status_code=status.HTTP_200_OK,
     summary="Check for Conflicts",
     description="Check for scheduling conflicts in provider's availability",

@@ -143,7 +143,9 @@ def send_verification_email(
 
         # Send email
         context = ssl.create_default_context()
-        with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
+        with smtplib.SMTP(
+            settings.smtp_server, settings.smtp_port, timeout=10
+        ) as server:
             server.starttls(context=context)
             server.login(settings.smtp_username, settings.smtp_password)
             server.sendmail(settings.email_from, email, message.as_string())
@@ -151,6 +153,12 @@ def send_verification_email(
         logger.info(f"Verification email sent successfully to {email}")
         return True
 
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"SMTP authentication failed for {email}: {e}")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error for {email}: {e}")
+        return False
     except Exception as e:
         logger.error(f"Failed to send verification email to {email}: {e}")
         return False
@@ -213,7 +221,9 @@ def send_welcome_email(email: str, provider_name: str) -> bool:
 
         # Send email
         context = ssl.create_default_context()
-        with smtplib.SMTP(settings.smtp_server, settings.smtp_port) as server:
+        with smtplib.SMTP(
+            settings.smtp_server, settings.smtp_port, timeout=10
+        ) as server:
             server.starttls(context=context)
             server.login(settings.smtp_username, settings.smtp_password)
             server.sendmail(settings.email_from, email, message.as_string())
@@ -221,6 +231,12 @@ def send_welcome_email(email: str, provider_name: str) -> bool:
         logger.info(f"Welcome email sent successfully to {email}")
         return True
 
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"SMTP authentication failed for {email}: {e}")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error for {email}: {e}")
+        return False
     except Exception as e:
         logger.error(f"Failed to send welcome email to {email}: {e}")
         return False

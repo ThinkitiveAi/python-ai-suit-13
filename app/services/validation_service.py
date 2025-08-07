@@ -16,7 +16,11 @@ class ValidationService:
         mongo_collection: Optional[Collection] = None,
     ):
         self.db = db
-        self.mongo_collection = mongo_collection or get_provider_collection()
+        # Only get mongo_collection if not provided and using MongoDB
+        if mongo_collection is None and settings.database_type == "mongodb":
+            self.mongo_collection = get_provider_collection()
+        else:
+            self.mongo_collection = mongo_collection
 
     def validate_provider_data(self, data: dict) -> Tuple[bool, Dict[str, List[str]]]:
         """
@@ -360,91 +364,127 @@ class ValidationService:
 
     def _check_duplicates(self, data: dict, errors: Dict[str, List[str]]):
         """Check for duplicate email and phone number."""
-        if "email" in data and data["email"]:
-            email = data["email"].strip().lower()
+        try:
+            if "email" in data and data["email"]:
+                email = data["email"].strip().lower()
 
-            # Check in SQL database
-            if self.db and settings.database_type in ["postgresql", "mysql"]:
-                from app.core.database import ProviderSQL
+                # Check in SQL database
+                if self.db and settings.database_type in ["postgresql", "mysql"]:
+                    from app.core.database import ProviderSQL
 
-                existing_provider = (
-                    self.db.query(ProviderSQL)
-                    .filter(ProviderSQL.email == email)
-                    .first()
+                    try:
+                        existing_provider = (
+                            self.db.query(ProviderSQL)
+                            .filter(ProviderSQL.email == email)
+                            .first()
+                        )
+                        if existing_provider:
+                            if "email" not in errors:
+                                errors["email"] = []
+                            errors["email"].append(
+                                "Email address is already registered"
+                            )
+                    except Exception as e:
+                        logger.error(f"Error checking email duplicate: {e}")
+                        # Don't fail validation if database query fails
+
+                # Check in MongoDB
+                elif self.mongo_collection and settings.database_type == "mongodb":
+                    try:
+                        existing_provider = self.mongo_collection.find_one(
+                            {"email": email}
+                        )
+                        if existing_provider:
+                            if "email" not in errors:
+                                errors["email"] = []
+                            errors["email"].append(
+                                "Email address is already registered"
+                            )
+                    except Exception as e:
+                        logger.error(f"Error checking email duplicate in MongoDB: {e}")
+
+            if "phone_number" in data and data["phone_number"]:
+                phone = (
+                    data["phone_number"]
+                    .replace(" ", "")
+                    .replace("-", "")
+                    .replace("(", "")
+                    .replace(")", "")
                 )
-                if existing_provider:
-                    if "email" not in errors:
-                        errors["email"] = []
-                    errors["email"].append("Email address is already registered")
 
-            # Check in MongoDB
-            elif self.mongo_collection and settings.database_type == "mongodb":
-                existing_provider = self.mongo_collection.find_one({"email": email})
-                if existing_provider:
-                    if "email" not in errors:
-                        errors["email"] = []
-                    errors["email"].append("Email address is already registered")
+                # Check in SQL database
+                if self.db and settings.database_type in ["postgresql", "mysql"]:
+                    from app.core.database import ProviderSQL
 
-        if "phone_number" in data and data["phone_number"]:
-            phone = (
-                data["phone_number"]
-                .replace(" ", "")
-                .replace("-", "")
-                .replace("(", "")
-                .replace(")", "")
-            )
+                    try:
+                        existing_provider = (
+                            self.db.query(ProviderSQL)
+                            .filter(ProviderSQL.phone_number == phone)
+                            .first()
+                        )
+                        if existing_provider:
+                            if "phone_number" not in errors:
+                                errors["phone_number"] = []
+                            errors["phone_number"].append(
+                                "Phone number is already registered"
+                            )
+                    except Exception as e:
+                        logger.error(f"Error checking phone duplicate: {e}")
 
-            # Check in SQL database
-            if self.db and settings.database_type in ["postgresql", "mysql"]:
-                from app.core.database import ProviderSQL
+                # Check in MongoDB
+                elif self.mongo_collection and settings.database_type == "mongodb":
+                    try:
+                        existing_provider = self.mongo_collection.find_one(
+                            {"phone_number": phone}
+                        )
+                        if existing_provider:
+                            if "phone_number" not in errors:
+                                errors["phone_number"] = []
+                            errors["phone_number"].append(
+                                "Phone number is already registered"
+                            )
+                    except Exception as e:
+                        logger.error(f"Error checking phone duplicate in MongoDB: {e}")
 
-                existing_provider = (
-                    self.db.query(ProviderSQL)
-                    .filter(ProviderSQL.phone_number == phone)
-                    .first()
-                )
-                if existing_provider:
-                    if "phone_number" not in errors:
-                        errors["phone_number"] = []
-                    errors["phone_number"].append("Phone number is already registered")
+            if "license_number" in data and data["license_number"]:
+                license_num = data["license_number"].strip().upper()
 
-            # Check in MongoDB
-            elif self.mongo_collection and settings.database_type == "mongodb":
-                existing_provider = self.mongo_collection.find_one(
-                    {"phone_number": phone}
-                )
-                if existing_provider:
-                    if "phone_number" not in errors:
-                        errors["phone_number"] = []
-                    errors["phone_number"].append("Phone number is already registered")
+                # Check in SQL database
+                if self.db and settings.database_type in ["postgresql", "mysql"]:
+                    from app.core.database import ProviderSQL
 
-        if "license_number" in data and data["license_number"]:
-            license_num = data["license_number"].strip().upper()
+                    try:
+                        existing_provider = (
+                            self.db.query(ProviderSQL)
+                            .filter(ProviderSQL.license_number == license_num)
+                            .first()
+                        )
+                        if existing_provider:
+                            if "license_number" not in errors:
+                                errors["license_number"] = []
+                            errors["license_number"].append(
+                                "License number is already registered"
+                            )
+                    except Exception as e:
+                        logger.error(f"Error checking license duplicate: {e}")
 
-            # Check in SQL database
-            if self.db and settings.database_type in ["postgresql", "mysql"]:
-                from app.core.database import ProviderSQL
+                # Check in MongoDB
+                elif self.mongo_collection and settings.database_type == "mongodb":
+                    try:
+                        existing_provider = self.mongo_collection.find_one(
+                            {"license_number": license_num}
+                        )
+                        if existing_provider:
+                            if "license_number" not in errors:
+                                errors["license_number"] = []
+                            errors["license_number"].append(
+                                "License number is already registered"
+                            )
+                    except Exception as e:
+                        logger.error(
+                            f"Error checking license duplicate in MongoDB: {e}"
+                        )
 
-                existing_provider = (
-                    self.db.query(ProviderSQL)
-                    .filter(ProviderSQL.license_number == license_num)
-                    .first()
-                )
-                if existing_provider:
-                    if "license_number" not in errors:
-                        errors["license_number"] = []
-                    errors["license_number"].append(
-                        "License number is already registered"
-                    )
-
-            # Check in MongoDB
-            elif self.mongo_collection and settings.database_type == "mongodb":
-                existing_provider = self.mongo_collection.find_one(
-                    {"license_number": license_num}
-                )
-                if existing_provider:
-                    if "license_number" not in errors:
-                        errors["license_number"] = []
-                    errors["license_number"].append(
-                        "License number is already registered"
-                    )
+        except Exception as e:
+            logger.error(f"Error in duplicate checking: {e}")
+            # Don't fail validation if duplicate checking fails

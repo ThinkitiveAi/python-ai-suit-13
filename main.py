@@ -53,7 +53,9 @@ async def lifespan(app: FastAPI):
             create_tables()
             logger.info("Database tables created successfully")
         except Exception as e:
-            logger.error(f"Failed to create database tables: {e}")
+            logger.warning(
+                f"Failed to create database tables: {e}. Continuing without database setup."
+            )
 
     logger.info(
         f"Provider Registration API started successfully on {settings.app_name} v{settings.app_version}"
@@ -146,12 +148,6 @@ app.include_router(auth_router)
 app.include_router(patient_router)
 app.include_router(availability_router)
 
-# Include routers
-app.include_router(provider_router)
-app.include_router(auth_router)
-
-
-
 # Root endpoint
 @app.get("/")
 async def root():
@@ -182,7 +178,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=settings.debug,
         log_level=settings.log_level.lower(),
     )
